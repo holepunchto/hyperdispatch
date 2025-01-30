@@ -96,7 +96,7 @@ module.exports = class Hyperdispatch {
     }
   }
 
-  static from (schemaJson, dispatchJson) {
+  static from (schemaJson, dispatchJson, opts) {
     const schema = Hyperschema.from(schemaJson)
     if (typeof dispatchJson === 'string') {
       const jsonFilePath = p.join(p.resolve(dispatchJson), DISPATCH_JSON_FILE_NAME)
@@ -107,11 +107,11 @@ module.exports = class Hyperdispatch {
       } catch (err) {
         if (err.code !== 'ENOENT') throw err
       }
-      const opts = { dispatchDir: dispatchJson, schemaDir: schemaJson }
+      opts = { ...opts, dispatchDir: dispatchJson, schemaDir: schemaJson }
       if (exists) return new this(schema, JSON.parse(fs.readFileSync(jsonFilePath)), opts)
       return new this(schema, null, opts)
     }
-    return new this(schema, dispatchJson)
+    return new this(schema, dispatchJson, opts)
   }
 
   static toDisk (hyperdispatch, dispatchDir) {

@@ -14,11 +14,11 @@ class TestBuilder {
     this.version = 0
   }
 
-  rebuild (builder) {
+  rebuild (builder, opts) {
     const schema = Hyperschema.from(this.schemaDir)
     builder.schema(schema)
     Hyperschema.toDisk(schema)
-    const hyperdispatch = Hyperdispatch.from(this.schemaDir, this.dispatchDir)
+    const hyperdispatch = Hyperdispatch.from(this.schemaDir, this.dispatchDir, opts)
     builder.dispatch(hyperdispatch)
     Hyperdispatch.toDisk(hyperdispatch)
 
