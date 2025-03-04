@@ -126,7 +126,7 @@ module.exports = class Hyperdispatch {
       dispatchDir = null
     }
     if (typeof opts.esm === 'undefined') {
-      opts.esm = this.esm
+      opts = { ...opts, esm: this.esm }
     }
     if (!dispatchDir) dispatchDir = hyperdispatch.dispatchDir
     fs.mkdirSync(dispatchDir, { recursive: true })
