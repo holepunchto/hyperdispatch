@@ -1,6 +1,8 @@
 const Hyperschema = require('hyperschema')
+const Hyperdispatch = require('hyperdispatch')
 
 const SCHEMA_DIR = './spec/hyperschema'
+const DISPATCH_DIR = './spec/hyperdispatch'
 
 const schema = Hyperschema.from(SCHEMA_DIR)
 const ns1 = schema.namespace('example')
@@ -22,12 +24,9 @@ ns1.register({
 })
 
 // Write the schema to disk
-Hyperschema.toDisk(schema)
 
-const Hyperdispatch = require('hyperdispatch')
-
-const DISPATCH_DIR = './spec/hyperdispatch'
-const hyperdispatch = Hyperdispatch.from(SCHEMA_DIR, DISPATCH_DIR)
+const hyperdispatch = Hyperdispatch.from(DISPATCH_DIR)
+hyperdispatch.registerSchema(schema)
 
 const ns2 = hyperdispatch.namespace('example')
 
@@ -45,7 +44,8 @@ ns2.register({
   requestType: '@example/request2'
 })
 
-// Write the hyperdispatch configuration to disk
+// Write the hyperdispatch/hyperschema configurations to disk
+Hyperschema.toDisk(schema)
 Hyperdispatch.toDisk(hyperdispatch)
 
 const { Router, dispatch } = require('./spec/hyperdispatch')
