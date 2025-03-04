@@ -1,11 +1,9 @@
 const p = require('path')
 const fs = require('fs')
-const Hyperschema = require('hyperschema')
 
 const generateCode = require('./lib/codegen')
 
 const CODE_FILE_NAME = 'index.js'
-const MESSAGES_FILE_NAME = 'messages.js'
 const DISPATCH_JSON_FILE_NAME = 'dispatch.json'
 
 class HyperdispatchNamespace {
@@ -21,12 +19,11 @@ class HyperdispatchNamespace {
 }
 
 module.exports = class Hyperdispatch {
-  constructor (schema, dispatchJson, { offset, dispatchDir = null, schemaDir = null } = {}) {
-    this.schema = schema
+  constructor (dispatchJson, { offset, dispatchDir = null } = {}) {
     this.version = dispatchJson ? dispatchJson.version : 0
     this.offset = dispatchJson ? dispatchJson.offset : (offset || 0)
     this.dispatchDir = dispatchDir
-    this.schemaDir = schemaDir
+    this.schema = null
 
     this.namespaces = new Map()
     this.handlersByName = new Map()
@@ -51,6 +48,8 @@ module.exports = class Hyperdispatch {
   }
 
   register (fqn, description) {
+    if (!this.schema) throw new Error('registerSchema must be called with a Hyperschema instance before registering handlers')
+
     const existingByName = this.handlersByName.get(fqn)
     const existingById = Number.isInteger(description.id) ? this.handlersById.get(description.id) : null
     if (existingByName && existingById) {
@@ -89,6 +88,11 @@ module.exports = class Hyperdispatch {
     }
   }
 
+  registerSchema (schema) {
+    if (this.schema) throw new Error('Already registered a hyperschema instance')
+    this.schema = schema
+  }
+
   toJSON () {
     return {
       version: this.version,
@@ -96,8 +100,7 @@ module.exports = class Hyperdispatch {
     }
   }
 
-  static from (schemaJson, dispatchJson, opts) {
-    const schema = Hyperschema.from(schemaJson)
+  static from (dispatchJson, opts) {
     if (typeof dispatchJson === 'string') {
       const jsonFilePath = p.join(p.resolve(dispatchJson), DISPATCH_JSON_FILE_NAME)
       let exists = false
@@ -107,23 +110,21 @@ module.exports = class Hyperdispatch {
       } catch (err) {
         if (err.code !== 'ENOENT') throw err
       }
-      opts = { ...opts, dispatchDir: dispatchJson, schemaDir: schemaJson }
-      if (exists) return new this(schema, JSON.parse(fs.readFileSync(jsonFilePath)), opts)
-      return new this(schema, null, opts)
+      opts = { ...opts, dispatchDir: dispatchJson }
+      if (exists) return new this(JSON.parse(fs.readFileSync(jsonFilePath)), opts)
+      return new this(null, opts)
     }
-    return new this(schema, dispatchJson, opts)
+    return new this(dispatchJson, opts)
   }
 
   static toDisk (hyperdispatch, dispatchDir) {
     if (!dispatchDir) dispatchDir = hyperdispatch.dispatchDir
     fs.mkdirSync(dispatchDir, { recursive: true })
 
-    const messagesPath = p.join(p.resolve(dispatchDir), MESSAGES_FILE_NAME)
     const dispatchJsonPath = p.join(p.resolve(dispatchDir), DISPATCH_JSON_FILE_NAME)
     const codePath = p.join(p.resolve(dispatchDir), CODE_FILE_NAME)
 
     fs.writeFileSync(dispatchJsonPath, JSON.stringify(hyperdispatch.toJSON(), null, 2), { encoding: 'utf-8' })
-    fs.writeFileSync(messagesPath, hyperdispatch.schema.toCode(), { encoding: 'utf-8' })
-    fs.writeFileSync(codePath, generateCode(hyperdispatch), { encoding: 'utf-8' })
+    fs.writeFileSync(codePath, generateCode(hyperdispatch, { directory: dispatchDir }), { encoding: 'utf-8' })
   }
 }
