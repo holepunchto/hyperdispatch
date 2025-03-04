@@ -46,6 +46,8 @@ module.exports = class Hyperdispatch {
     this.initializing = false
   }
 
+  static esm = false
+
   namespace (name) {
     return new HyperdispatchNamespace(this, name)
   }
@@ -114,7 +116,18 @@ module.exports = class Hyperdispatch {
     return new this(schema, dispatchJson, opts)
   }
 
-  static toDisk (hyperdispatch, dispatchDir) {
+  toCode ({ esm = this.constructor.esm, filename } = {}) {
+    return generateCode(this, { esm, filename })
+  }
+
+  static toDisk (hyperdispatch, dispatchDir, opts = {}) {
+    if (typeof dispatchDir === 'object' && dispatchDir) {
+      opts = dispatchDir
+      dispatchDir = null
+    }
+    if (typeof opts.esm === 'undefined') {
+      opts = { ...opts, esm: this.esm }
+    }
     if (!dispatchDir) dispatchDir = hyperdispatch.dispatchDir
     fs.mkdirSync(dispatchDir, { recursive: true })
 
@@ -123,7 +136,7 @@ module.exports = class Hyperdispatch {
     const codePath = p.join(p.resolve(dispatchDir), CODE_FILE_NAME)
 
     fs.writeFileSync(dispatchJsonPath, JSON.stringify(hyperdispatch.toJSON(), null, 2), { encoding: 'utf-8' })
-    fs.writeFileSync(messagesPath, hyperdispatch.schema.toCode(), { encoding: 'utf-8' })
-    fs.writeFileSync(codePath, generateCode(hyperdispatch), { encoding: 'utf-8' })
+    fs.writeFileSync(messagesPath, hyperdispatch.schema.toCode(opts), { encoding: 'utf-8' })
+    fs.writeFileSync(codePath, generateCode(hyperdispatch, opts), { encoding: 'utf-8' })
   }
 }

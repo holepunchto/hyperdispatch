@@ -4,10 +4,23 @@
   "description": "Generate operations/endpoints using Hyperschema",
   "main": "index.js",
   "files": [
-    "index.js",
-    "runtime.js",
-    "lib/*.js"
+    "lib/*.js",
+    "builder.mjs",
+    "builder.cjs",
+    "runtime.mjs",
+    "runtime.cjs"
   ],
+  "exports": {
+    "./package": "./package.json",
+    ".": {
+      "import": "./builder.mjs",
+      "require": "./builder.cjs"
+    },
+    "./runtime": {
+      "import": "./runtime.mjs",
+      "require": "./runtime.cjs"
+    }
+  },
   "scripts": {
     "test": "standard && brittle test/index.js"
   },
