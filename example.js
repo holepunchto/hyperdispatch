@@ -48,7 +48,7 @@ ns2.register({
 // Write the hyperdispatch configuration to disk
 Hyperdispatch.toDisk(hyperdispatch)
 
-const { Router, dispatch } = require('./spec/hyperdispatch')
+const { Router, encode } = require('./spec/hyperdispatch')
 
 const router = new Router()
 
@@ -71,9 +71,9 @@ router.add('@example/command3', (data, context) => {
 const context = { user: 'exampleUser' }
 
 // Dispatch a command1 message
-const encodedMessage1 = dispatch('@example/command1', { field1: 42, field2: 'hello' })
+const encodedMessage1 = encode('@example/command1', { field1: 42, field2: 'hello' })
 router.dispatch(encodedMessage1, context)
 
 // Dispatch a command3 message
-const encodedMessage2 = dispatch('@example/command3', { field1: 'world', field2: 99 })
+const encodedMessage2 = encode('@example/command3', { field1: 'world', field2: 99 })
 router.dispatch(encodedMessage2, context)
