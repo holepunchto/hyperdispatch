@@ -36,7 +36,7 @@ test('basic sync switch', async t => {
       })
     }
   })
-  const { dispatch, Router } = hd.module
+  const { encode, Router } = hd.module
 
   const r = new Router()
   r.add('@test/test-request-1', (req, ctx) => {
@@ -50,8 +50,8 @@ test('basic sync switch', async t => {
     t.is(req.str, 'world')
   })
 
-  await r.dispatch(dispatch('@test/test-request-1', { id: 10, str: 'hello' }), 'some-context')
-  await r.dispatch(dispatch('@test/test-request-2', { id: 20, str: 'world' }), 'another-context')
+  await r.dispatch(encode('@test/test-request-1', { id: 10, str: 'hello' }), 'some-context')
+  await r.dispatch(encode('@test/test-request-2', { id: 20, str: 'world' }), 'another-context')
 })
 
 test('basic sync switch + offset', async t => {
@@ -85,10 +85,10 @@ test('basic sync switch + offset', async t => {
       })
     }
   }, { offset: 10 })
-  const { dispatch } = hd.module
+  const { encode } = hd.module
 
-  const msg1 = dispatch('@test/test-request-1', { id: 10, str: 'hello' })
-  const msg2 = dispatch('@test/test-request-2', { id: 10, str: 'world' })
+  const msg1 = encode('@test/test-request-1', { id: 10, str: 'hello' })
+  const msg2 = encode('@test/test-request-2', { id: 10, str: 'world' })
   t.is(c.decode(c.uint, msg1), 10)
   t.is(c.decode(c.uint, msg2), 11)
 })
