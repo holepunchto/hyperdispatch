@@ -136,3 +136,140 @@ test('can both encode and decode ops', async t => {
   t.is(decoded1.value.id, 10)
   t.is(decoded2.value.str, 'world')
 })
+
+test('basic two namespaces with interleaved op additions', async t => {
+  t.plan(6)
+
+  const hd = await createTestSchema(t)
+  hd.rebuild({
+    schema: schema => {
+      const ns = schema.namespace('test')
+      ns.register({
+        name: 'request',
+        fields: [
+          {
+            name: 'id',
+            type: 'uint'
+          }
+        ]
+      })
+    },
+    dispatch: hyperdispatch => {
+      const ns1 = hyperdispatch.namespace('test1')
+      ns1.register({
+        name: 'test-request-1',
+        requestType: '@test/request'
+      })
+      const ns2 = hyperdispatch.namespace('test2')
+      ns2.register({
+        name: 'test-request-2',
+        requestType: '@test/request'
+      })
+    }
+  }, { offset: 2 })
+  hd.rebuild({
+    schema: schema => {
+      const ns = schema.namespace('test')
+      ns.register({
+        name: 'request',
+        fields: [
+          {
+            name: 'id',
+            type: 'uint'
+          }
+        ]
+      })
+    },
+    dispatch: hyperdispatch => {
+      const ns1 = hyperdispatch.namespace('test1')
+      ns1.register({
+        name: 'test-request-1',
+        requestType: '@test/request'
+      })
+      const ns2 = hyperdispatch.namespace('test2')
+      ns2.register({
+        name: 'test-request-2',
+        requestType: '@test/request'
+      })
+      ns1.register({
+        name: 'test-request-3',
+        requestType: '@test/request'
+      })
+    }
+  }, { offset: 2 })
+  const { encode, Router } = hd.module
+
+  const r = new Router()
+  r.add('@test1/test-request-1', (req, ctx) => {
+    t.is(ctx, 'some-context')
+    t.is(req.id, 10)
+  })
+  r.add('@test2/test-request-2', (req, ctx) => {
+    t.is(ctx, 'some-context')
+    t.is(req.id, 20)
+  })
+  r.add('@test1/test-request-3', (req, ctx) => {
+    t.is(ctx, 'another-context')
+    t.is(req.id, 30)
+  })
+
+  await r.dispatch(encode('@test1/test-request-1', { id: 10 }), 'some-context')
+  await r.dispatch(encode('@test2/test-request-2', { id: 20 }), 'some-context')
+  await r.dispatch(encode('@test1/test-request-3', { id: 30 }), 'another-context')
+})
+
+test('cannot change the offset', async t => {
+  const hd = await createTestSchema(t)
+  hd.rebuild({
+    schema: schema => {
+      const ns = schema.namespace('test')
+      ns.register({
+        name: 'request',
+        fields: [
+          {
+            name: 'id',
+            type: 'uint'
+          }
+        ]
+      })
+    },
+    dispatch: hyperdispatch => {
+      const ns1 = hyperdispatch.namespace('test1')
+      ns1.register({
+        name: 'test-request-1',
+        requestType: '@test/request'
+      })
+    }
+  }, { offset: 2 })
+
+  try {
+    hd.rebuild({
+      schema: schema => {
+        const ns = schema.namespace('test')
+        ns.register({
+          name: 'request',
+          fields: [
+            {
+              name: 'id',
+              type: 'uint'
+            }
+          ]
+        })
+      },
+      dispatch: hyperdispatch => {
+        const ns1 = hyperdispatch.namespace('test1')
+        ns1.register({
+          name: 'test-request-1',
+          requestType: '@test/request'
+        })
+        ns1.register({
+          name: 'test-request-2',
+          requestType: '@test/request'
+        })
+      }
+    }, { offset: 4 })
+    t.fail('rebuilding with different offset did not throw')
+  } catch {
+    t.pass('rebuilding with different offset should throw')
+  }
+})

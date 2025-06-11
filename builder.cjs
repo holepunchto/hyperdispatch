@@ -22,6 +22,9 @@ class HyperdispatchNamespace {
 
 module.exports = class Hyperdispatch {
   constructor (schema, dispatchJson, { offset, dispatchDir = null, schemaDir = null } = {}) {
+    if (dispatchJson && dispatchJson.offset !== offset) {
+      throw new Error('Cannot change the hyperdispatch offset once it has been defined once')
+    }
     this.schema = schema
     this.version = dispatchJson ? dispatchJson.version : 0
     this.offset = dispatchJson ? dispatchJson.offset : (offset || 0)
@@ -94,6 +97,7 @@ module.exports = class Hyperdispatch {
   toJSON () {
     return {
       version: this.version,
+      offset: this.offset,
       schema: this.handlers.map(({ type, ...h }) => h)
     }
   }
