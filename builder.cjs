@@ -22,7 +22,7 @@ class HyperdispatchNamespace {
 
 module.exports = class Hyperdispatch {
   constructor (schema, dispatchJson, { offset, dispatchDir = null, schemaDir = null } = {}) {
-    if (dispatchJson && Number.isInteger(dispatchJson.offset) && dispatchJson.offset !== offset) {
+    if (dispatchJson && dispatchJson.offset !== offset) {
       throw new Error('Cannot change the hyperdispatch offset once it has been defined once')
     }
     this.schema = schema
