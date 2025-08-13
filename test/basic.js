@@ -3,6 +3,7 @@ const process = require('process')
 const path = require('path')
 const test = require('brittle')
 const c = require('compact-encoding')
+const whichRuntime = require('which-runtime')
 
 const { createTestSchema } = require('./helpers')
 
@@ -278,6 +279,11 @@ test('cannot change the offset', async t => {
 })
 
 test('test schema passes linter', async t => {
+  if (whichRuntime.isWindows) {
+    t.comment('Skipped on windows because standard does not seem to run out of the box')
+    return
+  }
+
   t.plan(1)
   const hd = await createTestSchema(t)
   const dispatchDir = path.join(hd.dir, 'hyperdispatch')
@@ -312,7 +318,7 @@ test('test schema passes linter', async t => {
     }
   })
 
-  const exProc = spawn(path.join(path.dirname(__dirname), 'node_modules', '.bin', 'standard'), [dispatchDir])
+  const exProc = spawn('npx', ['standard', dispatchDir])
   exProc.on('close', (status) => {
     t.is(status, 0, 'linter detected no issues')
   })
