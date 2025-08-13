@@ -1,3 +1,6 @@
+const { spawn } = require('child_process')
+const process = require('process')
+const path = require('path')
 const test = require('brittle')
 const c = require('compact-encoding')
 
@@ -272,4 +275,52 @@ test('cannot change the offset', async t => {
   } catch {
     t.pass('rebuilding with different offset should throw')
   }
+})
+
+test('test schema passes linter', async t => {
+  t.plan(1)
+  const hd = await createTestSchema(t)
+  const dispatchDir = path.join(hd.dir, 'hyperdispatch')
+
+  hd.rebuild({
+    schema: schema => {
+      const ns = schema.namespace('test')
+      ns.register({
+        name: 'request',
+        fields: [
+          {
+            name: 'id',
+            type: 'uint'
+          },
+          {
+            name: 'str',
+            type: 'string'
+          }
+        ]
+      })
+    },
+    dispatch: hyperdispatch => {
+      const ns = hyperdispatch.namespace('test')
+      ns.register({
+        name: 'test-request-1',
+        requestType: '@test/request'
+      })
+      ns.register({
+        name: 'test-request-2',
+        requestType: '@test/request'
+      })
+    }
+  })
+
+  const exProc = spawn('npx', ['standard', dispatchDir])
+  exProc.on('close', (status) => {
+    t.is(status, 0, 'linter detected no issues')
+  })
+
+  // In case the test is aborted, we kill the standard process
+  process.on('exit', () => { exProc.kill('SIGKILL') })
+
+  exProc.stderr.on('data', d => {
+    console.error(`[linter error output] ${d.toString()}`)
+  })
 })
