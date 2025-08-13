@@ -312,7 +312,7 @@ test('test schema passes linter', async t => {
     }
   })
 
-  const exProc = spawn('./node_modules/.bin/standard', [dispatchDir])
+  const exProc = spawn(path.join(path.dirname(__dirname), 'node_modules', '.bin', 'standard'), [dispatchDir])
   exProc.on('close', (status) => {
     t.is(status, 0, 'linter detected no issues')
   })
