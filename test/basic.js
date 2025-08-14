@@ -330,3 +330,51 @@ test('test schema passes linter', async t => {
     console.error(`[linter error output] ${d.toString()}`)
   })
 })
+
+test('basic dispatch to non-existent route throws', async t => {
+  t.plan(4)
+
+  const hd = await createTestSchema(t)
+  hd.rebuild({
+    schema: schema => {
+      const ns = schema.namespace('test')
+      ns.register({
+        name: 'request',
+        fields: [
+          {
+            name: 'id',
+            type: 'uint'
+          },
+          {
+            name: 'str',
+            type: 'string'
+          }
+        ]
+      })
+    },
+    dispatch: hyperdispatch => {
+      const ns = hyperdispatch.namespace('test')
+      ns.register({
+        name: 'test-request-1',
+        requestType: '@test/request'
+      })
+    }
+  })
+  const { encode, Router } = hd.module
+
+  const r = new Router()
+  r.add('@test/test-request-1', (req, ctx) => {
+    t.is(ctx, 'some-context')
+    t.is(req.id, 10)
+    t.is(req.str, 'hello')
+  })
+
+  // Verify valid route
+  await r.dispatch(encode('@test/test-request-1', { id: 10, str: 'hello' }), 'some-context')
+
+  const badMsg = { id: -1, name: '@test/invalid', value: 'error' }
+  await t.exception(
+    r.dispatch(badMsg, 'invalid-context'),
+    /Handler not found for ID:-1/
+  )
+})
