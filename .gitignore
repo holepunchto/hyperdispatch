@@ -131,3 +131,8 @@ dist
 
 # example.js spec folder
 /spec
+
+package-lock.json
+
+test/test-storage
+.vscode
