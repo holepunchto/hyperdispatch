@@ -319,6 +319,7 @@ test('test schema passes linter', async t => {
   })
 
   const exProc = spawn('npx', ['standard', dispatchDir])
+  const exProc = spawn('npx', ['lunte', dispatchDir])
   exProc.on('close', (status) => {
     t.is(status, 0, 'linter detected no issues')
   })
