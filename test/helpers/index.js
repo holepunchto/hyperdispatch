@@ -6,7 +6,7 @@ const Hyperschema = require('hyperschema')
 const Hyperdispatch = require('../../builder.cjs')
 
 class TestBuilder {
-  constructor (dir) {
+  constructor(dir) {
     this.dir = dir
     this.schemaDir = p.join(dir, 'hyperschema')
     this.dispatchDir = p.join(dir, 'hyperdispatch')
@@ -14,7 +14,7 @@ class TestBuilder {
     this.version = 0
   }
 
-  rebuild (builder, opts) {
+  rebuild(builder, opts) {
     const schema = Hyperschema.from(this.schemaDir)
     builder.schema(schema)
     Hyperschema.toDisk(schema)
@@ -34,7 +34,7 @@ class TestBuilder {
   }
 }
 
-async function createTestSchema (t) {
+async function createTestSchema(t) {
   const dir = await tmp(t, { dir: p.join(__dirname, '../test-storage') })
 
   // Copy the runtime into the tmp dir so that we don't need to override it in the codegen

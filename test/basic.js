@@ -7,12 +7,12 @@ const whichRuntime = require('which-runtime')
 
 const { createTestSchema } = require('./helpers')
 
-test('basic sync switch', async t => {
+test('basic sync switch', async (t) => {
   t.plan(6)
 
   const hd = await createTestSchema(t)
   hd.rebuild({
-    schema: schema => {
+    schema: (schema) => {
       const ns = schema.namespace('test')
       ns.register({
         name: 'request',
@@ -28,7 +28,7 @@ test('basic sync switch', async t => {
         ]
       })
     },
-    dispatch: hyperdispatch => {
+    dispatch: (hyperdispatch) => {
       const ns = hyperdispatch.namespace('test')
       ns.register({
         name: 'test-request-1',
@@ -58,37 +58,40 @@ test('basic sync switch', async t => {
   await r.dispatch(encode('@test/test-request-2', { id: 20, str: 'world' }), 'another-context')
 })
 
-test('basic sync switch + offset', async t => {
+test('basic sync switch + offset', async (t) => {
   const hd = await createTestSchema(t)
-  hd.rebuild({
-    schema: schema => {
-      const ns = schema.namespace('test')
-      ns.register({
-        name: 'request',
-        fields: [
-          {
-            name: 'id',
-            type: 'uint'
-          },
-          {
-            name: 'str',
-            type: 'string'
-          }
-        ]
-      })
+  hd.rebuild(
+    {
+      schema: (schema) => {
+        const ns = schema.namespace('test')
+        ns.register({
+          name: 'request',
+          fields: [
+            {
+              name: 'id',
+              type: 'uint'
+            },
+            {
+              name: 'str',
+              type: 'string'
+            }
+          ]
+        })
+      },
+      dispatch: (hyperdispatch) => {
+        const ns = hyperdispatch.namespace('test')
+        ns.register({
+          name: 'test-request-1',
+          requestType: '@test/request'
+        })
+        ns.register({
+          name: 'test-request-2',
+          requestType: '@test/request'
+        })
+      }
     },
-    dispatch: hyperdispatch => {
-      const ns = hyperdispatch.namespace('test')
-      ns.register({
-        name: 'test-request-1',
-        requestType: '@test/request'
-      })
-      ns.register({
-        name: 'test-request-2',
-        requestType: '@test/request'
-      })
-    }
-  }, { offset: 10 })
+    { offset: 10 }
+  )
   const { encode } = hd.module
 
   const msg1 = encode('@test/test-request-1', { id: 10, str: 'hello' })
@@ -97,37 +100,40 @@ test('basic sync switch + offset', async t => {
   t.is(c.decode(c.uint, msg2), 11)
 })
 
-test('can both encode and decode ops', async t => {
+test('can both encode and decode ops', async (t) => {
   const hd = await createTestSchema(t)
-  hd.rebuild({
-    schema: schema => {
-      const ns = schema.namespace('test')
-      ns.register({
-        name: 'request',
-        fields: [
-          {
-            name: 'id',
-            type: 'uint'
-          },
-          {
-            name: 'str',
-            type: 'string'
-          }
-        ]
-      })
+  hd.rebuild(
+    {
+      schema: (schema) => {
+        const ns = schema.namespace('test')
+        ns.register({
+          name: 'request',
+          fields: [
+            {
+              name: 'id',
+              type: 'uint'
+            },
+            {
+              name: 'str',
+              type: 'string'
+            }
+          ]
+        })
+      },
+      dispatch: (hyperdispatch) => {
+        const ns = hyperdispatch.namespace('test')
+        ns.register({
+          name: 'test-request-1',
+          requestType: '@test/request'
+        })
+        ns.register({
+          name: 'test-request-2',
+          requestType: '@test/request'
+        })
+      }
     },
-    dispatch: hyperdispatch => {
-      const ns = hyperdispatch.namespace('test')
-      ns.register({
-        name: 'test-request-1',
-        requestType: '@test/request'
-      })
-      ns.register({
-        name: 'test-request-2',
-        requestType: '@test/request'
-      })
-    }
-  }, { offset: 10 })
+    { offset: 10 }
+  )
   const { encode, decode } = hd.module
 
   const encoded1 = encode('@test/test-request-1', { id: 10, str: 'hello' })
@@ -141,66 +147,72 @@ test('can both encode and decode ops', async t => {
   t.is(decoded2.value.str, 'world')
 })
 
-test('basic two namespaces with interleaved op additions', async t => {
+test('basic two namespaces with interleaved op additions', async (t) => {
   t.plan(6)
 
   const hd = await createTestSchema(t)
-  hd.rebuild({
-    schema: schema => {
-      const ns = schema.namespace('test')
-      ns.register({
-        name: 'request',
-        fields: [
-          {
-            name: 'id',
-            type: 'uint'
-          }
-        ]
-      })
+  hd.rebuild(
+    {
+      schema: (schema) => {
+        const ns = schema.namespace('test')
+        ns.register({
+          name: 'request',
+          fields: [
+            {
+              name: 'id',
+              type: 'uint'
+            }
+          ]
+        })
+      },
+      dispatch: (hyperdispatch) => {
+        const ns1 = hyperdispatch.namespace('test1')
+        ns1.register({
+          name: 'test-request-1',
+          requestType: '@test/request'
+        })
+        const ns2 = hyperdispatch.namespace('test2')
+        ns2.register({
+          name: 'test-request-2',
+          requestType: '@test/request'
+        })
+      }
     },
-    dispatch: hyperdispatch => {
-      const ns1 = hyperdispatch.namespace('test1')
-      ns1.register({
-        name: 'test-request-1',
-        requestType: '@test/request'
-      })
-      const ns2 = hyperdispatch.namespace('test2')
-      ns2.register({
-        name: 'test-request-2',
-        requestType: '@test/request'
-      })
-    }
-  }, { offset: 2 })
-  hd.rebuild({
-    schema: schema => {
-      const ns = schema.namespace('test')
-      ns.register({
-        name: 'request',
-        fields: [
-          {
-            name: 'id',
-            type: 'uint'
-          }
-        ]
-      })
+    { offset: 2 }
+  )
+  hd.rebuild(
+    {
+      schema: (schema) => {
+        const ns = schema.namespace('test')
+        ns.register({
+          name: 'request',
+          fields: [
+            {
+              name: 'id',
+              type: 'uint'
+            }
+          ]
+        })
+      },
+      dispatch: (hyperdispatch) => {
+        const ns1 = hyperdispatch.namespace('test1')
+        ns1.register({
+          name: 'test-request-1',
+          requestType: '@test/request'
+        })
+        const ns2 = hyperdispatch.namespace('test2')
+        ns2.register({
+          name: 'test-request-2',
+          requestType: '@test/request'
+        })
+        ns1.register({
+          name: 'test-request-3',
+          requestType: '@test/request'
+        })
+      }
     },
-    dispatch: hyperdispatch => {
-      const ns1 = hyperdispatch.namespace('test1')
-      ns1.register({
-        name: 'test-request-1',
-        requestType: '@test/request'
-      })
-      const ns2 = hyperdispatch.namespace('test2')
-      ns2.register({
-        name: 'test-request-2',
-        requestType: '@test/request'
-      })
-      ns1.register({
-        name: 'test-request-3',
-        requestType: '@test/request'
-      })
-    }
-  }, { offset: 2 })
+    { offset: 2 }
+  )
   const { encode, Router } = hd.module
 
   const r = new Router()
@@ -222,33 +234,11 @@ test('basic two namespaces with interleaved op additions', async t => {
   await r.dispatch(encode('@test1/test-request-3', { id: 30 }), 'another-context')
 })
 
-test('cannot change the offset', async t => {
+test('cannot change the offset', async (t) => {
   const hd = await createTestSchema(t)
-  hd.rebuild({
-    schema: schema => {
-      const ns = schema.namespace('test')
-      ns.register({
-        name: 'request',
-        fields: [
-          {
-            name: 'id',
-            type: 'uint'
-          }
-        ]
-      })
-    },
-    dispatch: hyperdispatch => {
-      const ns1 = hyperdispatch.namespace('test1')
-      ns1.register({
-        name: 'test-request-1',
-        requestType: '@test/request'
-      })
-    }
-  }, { offset: 2 })
-
-  try {
-    hd.rebuild({
-      schema: schema => {
+  hd.rebuild(
+    {
+      schema: (schema) => {
         const ns = schema.namespace('test')
         ns.register({
           name: 'request',
@@ -260,25 +250,53 @@ test('cannot change the offset', async t => {
           ]
         })
       },
-      dispatch: hyperdispatch => {
+      dispatch: (hyperdispatch) => {
         const ns1 = hyperdispatch.namespace('test1')
         ns1.register({
           name: 'test-request-1',
           requestType: '@test/request'
         })
-        ns1.register({
-          name: 'test-request-2',
-          requestType: '@test/request'
-        })
       }
-    }, { offset: 4 })
+    },
+    { offset: 2 }
+  )
+
+  try {
+    hd.rebuild(
+      {
+        schema: (schema) => {
+          const ns = schema.namespace('test')
+          ns.register({
+            name: 'request',
+            fields: [
+              {
+                name: 'id',
+                type: 'uint'
+              }
+            ]
+          })
+        },
+        dispatch: (hyperdispatch) => {
+          const ns1 = hyperdispatch.namespace('test1')
+          ns1.register({
+            name: 'test-request-1',
+            requestType: '@test/request'
+          })
+          ns1.register({
+            name: 'test-request-2',
+            requestType: '@test/request'
+          })
+        }
+      },
+      { offset: 4 }
+    )
     t.fail('rebuilding with different offset did not throw')
   } catch {
     t.pass('rebuilding with different offset should throw')
   }
 })
 
-test('test schema passes linter', async t => {
+test('test schema passes linter', async (t) => {
   if (whichRuntime.isWindows) {
     t.comment('Skipped on windows because standard does not seem to run out of the box')
     return
@@ -289,7 +307,7 @@ test('test schema passes linter', async t => {
   const dispatchDir = path.join(hd.dir, 'hyperdispatch')
 
   hd.rebuild({
-    schema: schema => {
+    schema: (schema) => {
       const ns = schema.namespace('test')
       ns.register({
         name: 'request',
@@ -305,7 +323,7 @@ test('test schema passes linter', async t => {
         ]
       })
     },
-    dispatch: hyperdispatch => {
+    dispatch: (hyperdispatch) => {
       const ns = hyperdispatch.namespace('test')
       ns.register({
         name: 'test-request-1',
@@ -318,25 +336,27 @@ test('test schema passes linter', async t => {
     }
   })
 
-  const exProc = spawn('npx', ['standard', dispatchDir])
+  const exProc = spawn('npx', ['lunte', dispatchDir])
   exProc.on('close', (status) => {
     t.is(status, 0, 'linter detected no issues')
   })
 
   // In case the test is aborted, we kill the standard process
-  process.on('exit', () => { exProc.kill('SIGKILL') })
+  process.on('exit', () => {
+    exProc.kill('SIGKILL')
+  })
 
-  exProc.stderr.on('data', d => {
+  exProc.stderr.on('data', (d) => {
     console.error(`[linter error output] ${d.toString()}`)
   })
 })
 
-test('basic dispatch to non-existent route throws', async t => {
+test('basic dispatch to non-existent route throws', async (t) => {
   t.plan(4)
 
   const hd = await createTestSchema(t)
   hd.rebuild({
-    schema: schema => {
+    schema: (schema) => {
       const ns = schema.namespace('test')
       ns.register({
         name: 'request',
@@ -352,7 +372,7 @@ test('basic dispatch to non-existent route throws', async t => {
         ]
       })
     },
-    dispatch: hyperdispatch => {
+    dispatch: (hyperdispatch) => {
       const ns = hyperdispatch.namespace('test')
       ns.register({
         name: 'test-request-1',
@@ -373,8 +393,5 @@ test('basic dispatch to non-existent route throws', async t => {
   await r.dispatch(encode('@test/test-request-1', { id: 10, str: 'hello' }), 'some-context')
 
   const badMsg = { id: -1, name: '@test/invalid', value: 'error' }
-  await t.exception(
-    r.dispatch(badMsg, 'invalid-context'),
-    /Handler not found for ID:-1/
-  )
+  await t.exception(r.dispatch(badMsg, 'invalid-context'), /Handler not found for ID:-1/)
 })

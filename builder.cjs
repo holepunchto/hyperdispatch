@@ -9,25 +9,25 @@ const MESSAGES_FILE_NAME = 'messages.js'
 const DISPATCH_JSON_FILE_NAME = 'dispatch.json'
 
 class HyperdispatchNamespace {
-  constructor (hyperdispatch, name) {
+  constructor(hyperdispatch, name) {
     this.hyperdispatch = hyperdispatch
     this.name = name
   }
 
-  register (description) {
+  register(description) {
     const fqn = '@' + this.name + '/' + description.name
     this.hyperdispatch.register(fqn, description)
   }
 }
 
 module.exports = class Hyperdispatch {
-  constructor (schema, dispatchJson, { offset, dispatchDir = null, schemaDir = null } = {}) {
+  constructor(schema, dispatchJson, { offset, dispatchDir = null, schemaDir = null } = {}) {
     if (dispatchJson && offset && dispatchJson.offset !== offset) {
       throw new Error('Cannot change the hyperdispatch offset once it has been defined once')
     }
     this.schema = schema
     this.version = dispatchJson ? dispatchJson.version : 0
-    this.offset = dispatchJson ? dispatchJson.offset : (offset || 0)
+    this.offset = dispatchJson ? dispatchJson.offset : offset || 0
     this.dispatchDir = dispatchDir
     this.schemaDir = schemaDir
 
@@ -51,16 +51,18 @@ module.exports = class Hyperdispatch {
 
   static esm = false
 
-  namespace (name) {
+  namespace(name) {
     return new HyperdispatchNamespace(this, name)
   }
 
-  register (fqn, description) {
+  register(fqn, description) {
     const existingByName = this.handlersByName.get(fqn)
-    const existingById = Number.isInteger(description.id) ? this.handlersById.get(description.id) : null
+    const existingById = Number.isInteger(description.id)
+      ? this.handlersById.get(description.id)
+      : null
     if (existingByName && existingById) {
       if (existingByName !== existingById) throw new Error('ID/Name mismatch for handler: ' + fqn)
-      if (Number.isInteger(description.id) && (existingByName.id !== description.id)) {
+      if (Number.isInteger(description.id) && existingByName.id !== description.id) {
         throw new Error('Cannot change the assigned ID for handler: ' + fqn)
       }
     }
@@ -68,7 +70,7 @@ module.exports = class Hyperdispatch {
     const type = this.schema.resolve(description.requestType)
     if (!type) throw new Error('Invalid request type')
 
-    if (existingByName && (existingByName.type !== type)) {
+    if (existingByName && existingByName.type !== type) {
       throw new Error('Cannot alter the request type for a handler')
     }
 
@@ -94,7 +96,7 @@ module.exports = class Hyperdispatch {
     }
   }
 
-  toJSON () {
+  toJSON() {
     return {
       version: this.version,
       offset: this.offset,
@@ -102,7 +104,7 @@ module.exports = class Hyperdispatch {
     }
   }
 
-  static from (schemaJson, dispatchJson, opts) {
+  static from(schemaJson, dispatchJson, opts) {
     const schema = Hyperschema.from(schemaJson)
     if (typeof dispatchJson === 'string') {
       const jsonFilePath = p.join(p.resolve(dispatchJson), DISPATCH_JSON_FILE_NAME)
@@ -120,11 +122,11 @@ module.exports = class Hyperdispatch {
     return new this(schema, dispatchJson, opts)
   }
 
-  toCode ({ esm = this.constructor.esm, filename } = {}) {
+  toCode({ esm = this.constructor.esm, filename } = {}) {
     return generateCode(this, { esm, filename })
   }
 
-  static toDisk (hyperdispatch, dispatchDir, opts = {}) {
+  static toDisk(hyperdispatch, dispatchDir, opts = {}) {
     if (typeof dispatchDir === 'object' && dispatchDir) {
       opts = dispatchDir
       dispatchDir = null
@@ -139,7 +141,9 @@ module.exports = class Hyperdispatch {
     const dispatchJsonPath = p.join(p.resolve(dispatchDir), DISPATCH_JSON_FILE_NAME)
     const codePath = p.join(p.resolve(dispatchDir), CODE_FILE_NAME)
 
-    fs.writeFileSync(dispatchJsonPath, JSON.stringify(hyperdispatch.toJSON(), null, 2), { encoding: 'utf-8' })
+    fs.writeFileSync(dispatchJsonPath, JSON.stringify(hyperdispatch.toJSON(), null, 2), {
+      encoding: 'utf-8'
+    })
     fs.writeFileSync(messagesPath, hyperdispatch.schema.toCode(opts), { encoding: 'utf-8' })
     fs.writeFileSync(codePath, generateCode(hyperdispatch, opts), { encoding: 'utf-8' })
   }
