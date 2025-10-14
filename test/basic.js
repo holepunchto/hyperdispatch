@@ -395,3 +395,41 @@ test('basic dispatch to non-existent route throws', async (t) => {
   const badMsg = { id: -1, name: '@test/invalid', value: 'error' }
   await t.exception(r.dispatch(badMsg, 'invalid-context'), /Handler not found for ID:-1/)
 })
+
+test('can both encode and decode string enums', async (t) => {
+  const hd = await createTestSchema(t)
+  hd.rebuild(
+    {
+      schema: (schema) => {
+        const ns = schema.namespace('test')
+        ns.register({
+          name: 'request',
+          strings: true,
+          enum: ['en', 'it']
+        })
+      },
+      dispatch: (hyperdispatch) => {
+        const ns = hyperdispatch.namespace('test')
+        ns.register({
+          name: 'test-request-1',
+          requestType: '@test/request'
+        })
+        ns.register({
+          name: 'test-request-2',
+          requestType: '@test/request'
+        })
+      }
+    },
+    { offset: 10 }
+  )
+  const { encode, decode } = hd.module
+
+  const encoded1 = encode('@test/test-request-1', 'en')
+  const encoded2 = encode('@test/test-request-2', 'it')
+
+  const decoded1 = decode(encoded1)
+  const decoded2 = decode(encoded2)
+  t.is(decoded1.name, '@test/test-request-1')
+  t.is(decoded2.name, '@test/test-request-2')
+  t.is(decoded2.value, 'it')
+})
