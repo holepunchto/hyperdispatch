@@ -1,5 +1,6 @@
 import c from 'compact-encoding'
 import b4a from 'b4a'
 import assert from 'nanoassert'
+import { DispatchError, ERRORS } from './lib/errors'
 
-export { c, b4a, assert }
+export { c, b4a, assert, DispatchError, ERRORS }

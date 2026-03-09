@@ -393,7 +393,7 @@ test('basic dispatch to non-existent route throws', async (t) => {
   await r.dispatch(encode('@test/test-request-1', { id: 10, str: 'hello' }), 'some-context')
 
   const badMsg = { id: -1, name: '@test/invalid', value: 'error' }
-  await t.exception(r.dispatch(badMsg, 'invalid-context'), /Handler not found for ID:-1/)
+  await t.exception(r.dispatch(badMsg, 'invalid-context'), /HANDLER_NOT_FOUND_BY_ID/)
 })
 
 test('can both encode and decode string enums', async (t) => {
