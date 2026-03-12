@@ -1,4 +1,4 @@
-const { DispatchError, ERRORS } = require('./lib/errors')
+const { DispatchError, ERRORS } = require('./lib/errors.js')
 
 module.exports = {
   c: require('compact-encoding'),
