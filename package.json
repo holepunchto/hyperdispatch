@@ -22,6 +22,14 @@
     "fs/*": {
       "bare": "bare-fs/*",
       "default": "fs/*"
+    },
+    "process": {
+      "bare": "bare-process",
+      "default": "process"
+    },
+    "child_process": {
+      "bare": "bare-subprocess",
+      "default": "child_process"
     }
   },
   "exports": {
@@ -51,6 +59,8 @@
   },
   "homepage": "https://github.com/holepunchto/hyperdispatch#readme",
   "devDependencies": {
+    "bare-process": "^4.2.2",
+    "bare-subprocess": "^5.2.2",
     "brittle": "^3.7.0",
     "prettier": "^3.6.2",
     "prettier-config-holepunch": "^2.0.0",
